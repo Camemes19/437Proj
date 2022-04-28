@@ -95,49 +95,70 @@ def main():
     dotguess = perceptron(len(traind[0].heroes))
     learnrate = 0.5
     traind_mode = {}
+    X = []
+    Y = []
     errs = []
     n = 0
     p = 0
     fp = 0
     fn = 0
+    tp = 0
+    tn = 0
     #how many iterations?
     i = 1
     for i in range(10):
         traind_mode[i] = sortMode(traind, i)
     for j in range(20):
         folded = K_Fold(10, traind_mode[2])
+        err2 = []
         for i in range(10):
             errorcount = 0
             test = folded[i]
             train = []
-            for j in range(10):
-                if j != i:
-                    train += folded[j]
+            for k in range(10):
+                if k != i:
+                    train += folded[k]
             for point in train:
                 a = predict(dotguess, point)
                 if a*point.outcome <= 0:
                     update(dotguess, point.outcome, point, learnrate)
             for point in test:
                 a = predict(dotguess, point)
-                if point.outcome == -1:
+                if a == -1:
                     n += 1
                 else:
                     p += 1
-                if a*point.outcome <= 0:
+                if a*point.outcome > 0:
+                    if a == -1:
+                        tn += 1
+                    else:
+                        tp += 1
+                else:
                     errorcount += 1
                     if a == -1:
                         fn += 1
                     else:
                         fp += 1
             errs.append(errorcount)
+            err2.append(errorcount)
             print(dotguess.weights)
             print(dotguess.bias)
+        X.append(j)
+        avg = sum(err2)/10
+        Y.append(1-(avg/len(test)))
     print(errs)
-    avgerr = sum(errs)/200
+    avgerr = sum(errs)/20
+    print(X)
+    print(Y)
+    plt.plot(X, Y)
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.title('Dota 2 Perceptron Accuracy')
+    plt.show()
     print(avgerr)
-    print("Accuracy:", (1-avgerr)/len(test))
-    print("Precision:", fp/p)
-    print("Recall:", fn/n)
+    print("Accuracy:", 1-((avgerr)/len(test)))
+    print("Precision:", tp/p)
+    print("Recall:", tp/(tp+fn))
     #for point in test:
         #a = predict(dotguess, point)
         #predict
